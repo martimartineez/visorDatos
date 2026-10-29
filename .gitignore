@@ -1,0 +1,28 @@
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Entornos y dependencias
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+node_modules/
+dist/
+build/
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Datos y salidas generadas
+data/raw/
+*.log
