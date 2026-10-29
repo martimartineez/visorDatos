@@ -26,3 +26,6 @@ build/
 # Datos y salidas generadas
 data/raw/
 *.log
+
+# Temporales de desarrollo
+.tmp/
