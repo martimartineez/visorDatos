@@ -9,5 +9,5 @@ cd "$ROOT/frontend"
 npm run build
 
 echo
-echo "Build listo. Servidor único con:"
-echo "  .venv/bin/python -m uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000"
+echo "Build listo. Para levantar la app:"
+echo "  ./scripts/start.sh"

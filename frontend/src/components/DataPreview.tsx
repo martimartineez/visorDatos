@@ -5,9 +5,10 @@ const PREVIEW_ROWS = 30;
 
 interface Props {
   parsed: ParsedTable;
+  totalRows: number;
 }
 
-export default function DataPreview({ parsed }: Props) {
+export default function DataPreview({ parsed, totalRows }: Props) {
   const rows = parsed.rows.slice(0, PREVIEW_ROWS);
 
   return (
@@ -15,7 +16,10 @@ export default function DataPreview({ parsed }: Props) {
       <div className="preview-head">
         <h2 className="card-title">Vista previa</h2>
         <span className="muted">
-          {rows.length} de {parsed.rows.length.toLocaleString('es-AR')} filas
+          {rows.length < parsed.rows.length && `${rows.length} de `}
+          {parsed.rows.length.toLocaleString('es-AR')} filas
+          {parsed.rows.length !== totalRows &&
+            ` · filtradas de ${totalRows.toLocaleString('es-AR')}`}
         </span>
       </div>
 

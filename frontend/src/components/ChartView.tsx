@@ -33,6 +33,7 @@ const AGG_LABEL: Record<ChartConfig['aggregation'], string> = {
 
 interface Props {
   parsed: ParsedTable;
+  totalRows: number;
   config: ChartConfig;
   result: ChartBuildResult;
   onDownload: () => void;
@@ -42,7 +43,7 @@ function truncate(text: string, max = 18): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
-export default function ChartView({ parsed, config, result, onDownload }: Props) {
+export default function ChartView({ parsed, totalRows, config, result, onDownload }: Props) {
   const dark = usePrefersDark();
   const theme = dark
     ? { grid: '#2b3445', axis: '#9aa7bd', surface: '#111826', text: '#e8edf7', tooltipBg: '#151d2c', tooltipBorder: '#2b3445' }
@@ -301,7 +302,10 @@ export default function ChartView({ parsed, config, result, onDownload }: Props)
           <h2 className="chart-title">{title}</h2>
           <p className="chart-sub">
             {data.length.toLocaleString('es-AR')} categorías ·{' '}
-            {parsed.rows.length.toLocaleString('es-AR')} filas analizadas
+            {parsed.rows.length.toLocaleString('es-AR')}
+            {parsed.rows.length !== totalRows &&
+              ` de ${totalRows.toLocaleString('es-AR')} filas (filtradas)`}
+            {parsed.rows.length === totalRows && ' filas analizadas'}
             {result.skipped > 0 && ` · ${result.skipped.toLocaleString('es-AR')} con datos incompletos`}
           </p>
         </div>

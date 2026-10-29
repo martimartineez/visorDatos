@@ -3,13 +3,15 @@ import { extractFile } from './api';
 import ChartControls from './components/ChartControls';
 import ChartView from './components/ChartView';
 import DataPreview from './components/DataPreview';
+import FilterPanel from './components/FilterPanel';
 import SourcePanel from './components/SourcePanel';
 import UploadDropzone from './components/UploadDropzone';
 import { buildChartData } from './lib/chart';
 import { DEFAULT_CONFIG, ensureScatterAxis, normalizeConfig } from './lib/config';
 import { chartToCsv, downloadCsv } from './lib/csv';
+import { applyFilters } from './lib/filters';
 import { parseTable } from './lib/table';
-import type { ChartConfig, ExtractResponse } from './types';
+import type { ChartConfig, ExtractResponse, Filter } from './types';
 
 function slug(text: string): string {
   return (
@@ -27,6 +29,7 @@ export default function App() {
   const [tableId, setTableId] = useState<string | null>(null);
   const [headerRow, setHeaderRow] = useState(0);
   const [config, setConfig] = useState<ChartConfig>(DEFAULT_CONFIG);
+  const [filters, setFilters] = useState<Filter[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,10 +40,19 @@ export default function App() {
 
   const parsed = useMemo(() => (table ? parseTable(table, headerRow) : null), [table, headerRow]);
 
-  const result = useMemo(
-    () => (parsed ? buildChartData(parsed, config) : { data: [], series: [], skipped: 0 }),
-    [parsed, config],
+  const filtered = useMemo(
+    () => (parsed ? { ...parsed, rows: applyFilters(parsed.rows, filters) } : null),
+    [parsed, filters],
   );
+
+  const result = useMemo(
+    () => (filtered ? buildChartData(filtered, config) : { data: [], series: [], skipped: 0 }),
+    [filtered, config],
+  );
+
+  useEffect(() => {
+    setFilters([]);
+  }, [document, tableId]);
 
   useEffect(() => {
     if (!parsed) return;
@@ -137,7 +149,7 @@ export default function App() {
             <h1>Convertí tablas en gráficos</h1>
             <p>
               Subí un PDF, un Excel o un CSV. Detectamos las tablas, los encabezados y las columnas
-              numéricas: vos elegís el gráfico.
+              numéricas: filtrás filas por columna y elegís el gráfico.
             </p>
           </div>
 
@@ -163,7 +175,7 @@ export default function App() {
             <div className="step">
               <span className="step-number">3</span>
               <strong>Armá el gráfico</strong>
-              <p>Barras, líneas, torta, dona, área o dispersión. Cambiás cuando quieras.</p>
+              <p>Filtrá filas por columna y elegí barras, líneas, torta, dona, área o dispersión.</p>
             </div>
           </div>
         </main>
@@ -184,14 +196,25 @@ export default function App() {
                 onTableChange={handleTableChange}
               />
             )}
+            {parsed && (
+              <FilterPanel parsed={parsed} filters={filters} onChange={setFilters} />
+            )}
             {parsed && <ChartControls parsed={parsed} config={config} onChange={updateConfig} />}
           </aside>
 
           <div className="content">
-            {parsed && (
-              <ChartView parsed={parsed} config={config} result={result} onDownload={handleDownload} />
+            {parsed && filtered && (
+              <ChartView
+                parsed={filtered}
+                totalRows={parsed.rows.length}
+                config={config}
+                result={result}
+                onDownload={handleDownload}
+              />
             )}
-            {parsed && <DataPreview parsed={parsed} />}
+            {parsed && filtered && (
+              <DataPreview parsed={filtered} totalRows={parsed.rows.length} />
+            )}
           </div>
         </main>
       )}

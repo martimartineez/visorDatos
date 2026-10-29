@@ -72,3 +72,22 @@ export interface ChartDatum {
   xValue: number | null;
   [key: string]: string | number | null;
 }
+
+/** Filtro por valores de una columna: excluye las claves seleccionadas. */
+export interface ValueFilter {
+  id: string;
+  column: number;
+  kind: 'values';
+  excluded: string[];
+}
+
+/** Filtro por rango numérico; los extremos nulos no limitan. */
+export interface RangeFilter {
+  id: string;
+  column: number;
+  kind: 'range';
+  min: number | null;
+  max: number | null;
+}
+
+export type Filter = ValueFilter | RangeFilter;
