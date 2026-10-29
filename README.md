@@ -22,7 +22,9 @@ el tipo de gráfico cuando quieras.
   máximo, mínimo), orden y Top N.
 - **Filtros**: por valores (texto: tildás qué dejar) y por rango (números: mínimo/máximo). Se
   combinan entre columnas y afectan al gráfico, a la vista previa y al CSV del gráfico.
-- **Exportar**: CSV del gráfico agregado y CSV de la tabla completa ya normalizada.
+- **Exportar**: CSV del gráfico agregado (mismos datos y filtros que ves) e imagen **PNG** del
+  gráfico tal como se muestra (título, leyenda y total incluidos), además del CSV de la tabla
+  completa ya normalizada.
 - **App local**: se abre con doble clic, corre en un solo puerto y se puede instalar desde el
   navegador (PWA) para usarla en su propia ventana.
 - **Local**: los archivos se procesan en tu máquina y se descartan al terminar; no se envían a
@@ -164,7 +166,7 @@ frontend/
   src/
     App.tsx
     components/        # dropzone, fuente, filtros, controles, gráfico, preview
-    lib/               # números, tipos de columna, filtros, agregación, CSV
+    lib/               # números, tipos de columna, filtros, agregación, CSV y descargas
 scripts/
   setup.sh · dev.sh · build.sh · start.sh · stop.sh
 Iniciar Visor.bat            # lanzador Windows (con consola)
@@ -182,6 +184,8 @@ visor.ico                    # icono para el acceso directo
 - Los filtros se aplican en el navegador: afectan al gráfico, a la vista previa y al CSV del
   gráfico, pero **no** a «Descargar tabla completa (CSV)», que baja la tabla original del servidor.
 - El backend mantiene los últimos 8 archivos en memoria para exportar; los reinicios los borran.
+- La imagen del gráfico se genera en el navegador a partir de lo que se ve en pantalla (2× de
+  resolución), así que en el PNG no aparecen los botones de descarga.
 - Los lanzadores de Windows asumen la distro `Ubuntu` (ruta `\\wsl$\Ubuntu\...`) y el proyecto en
   `/home/<usuario>/visorDatos`.
 
@@ -189,4 +193,3 @@ visor.ico                    # icono para el acceso directo
 
 - Agrupar series por una segunda dimensión (barras apiladas / agrupadas).
 - OCR opcional para PDFs escaneados.
-- Exportar el gráfico como PNG.

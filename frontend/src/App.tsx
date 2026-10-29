@@ -106,12 +106,18 @@ export default function App() {
     setError(null);
   };
 
-  const handleDownload = () => {
-    if (!parsed) return;
+  const downloadBase = useMemo(() => {
     const base = (document?.filename ?? 'datos').replace(/\.[^.]+$/, '');
     const xName =
-      config.xIndex !== null ? parsed.columns[config.xIndex]?.name ?? 'categorias' : 'categorias';
-    downloadCsv(`${base}-${config.type}-${slug(xName)}.csv`, chartToCsv(result.data, result.series));
+      parsed && config.xIndex !== null
+        ? parsed.columns[config.xIndex]?.name ?? 'categorias'
+        : 'categorias';
+    return `${base}-${config.type}-${slug(xName)}`;
+  }, [document, parsed, config]);
+
+  const handleDownload = () => {
+    if (!parsed) return;
+    downloadCsv(`${downloadBase}.csv`, chartToCsv(result.data, result.series));
   };
 
   return (
@@ -210,6 +216,7 @@ export default function App() {
                 config={config}
                 result={result}
                 onDownload={handleDownload}
+                imageFilename={`${downloadBase}.png`}
               />
             )}
             {parsed && filtered && (

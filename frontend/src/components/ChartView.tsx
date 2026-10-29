@@ -19,6 +19,9 @@ import {
 } from 'recharts';
 import type { ChartBuildResult } from '../lib/chart';
 import { PALETTE, chartHasData } from '../lib/chart';
+import { toBlob } from 'html-to-image';
+import { useRef, useState } from 'react';
+import { downloadBlob } from '../lib/download';
 import { formatCompact, formatNumber } from '../lib/numbers';
 import { usePrefersDark } from '../lib/theme';
 import type { ChartConfig, ParsedTable } from '../types';
@@ -37,14 +40,25 @@ interface Props {
   config: ChartConfig;
   result: ChartBuildResult;
   onDownload: () => void;
+  imageFilename: string;
 }
 
 function truncate(text: string, max = 18): string {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
-export default function ChartView({ parsed, totalRows, config, result, onDownload }: Props) {
+export default function ChartView({
+  parsed,
+  totalRows,
+  config,
+  result,
+  onDownload,
+  imageFilename,
+}: Props) {
   const dark = usePrefersDark();
+  const cardRef = useRef<HTMLElement>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
   const theme = dark
     ? { grid: '#2b3445', axis: '#9aa7bd', surface: '#111826', text: '#e8edf7', tooltipBg: '#151d2c', tooltipBorder: '#2b3445' }
     : { grid: '#e6e9ef', axis: '#64748b', surface: '#ffffff', text: '#111827', tooltipBg: '#ffffff', tooltipBorder: '#e2e8f0' };
@@ -63,6 +77,32 @@ export default function ChartView({ parsed, totalRows, config, result, onDownloa
     const value = datum.value;
     return typeof value === 'number' ? sum + value : sum;
   }, 0);
+
+  const handleDownloadImage = async () => {
+    const node = cardRef.current;
+    if (!node || !hasData || exporting) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      const blob = await toBlob(node, {
+        pixelRatio: 2,
+        backgroundColor: theme.surface,
+        cacheBust: true,
+        filter: (child) =>
+          !(child instanceof HTMLElement && child.dataset.exportSkip === 'true'),
+      });
+      if (!blob) throw new Error('El navegador no pudo generar la imagen.');
+      downloadBlob(imageFilename, blob);
+    } catch (cause) {
+      setExportError(
+        cause instanceof Error
+          ? `No se pudo descargar la imagen: ${cause.message}`
+          : 'No se pudo descargar la imagen.',
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const tooltip = {
     contentStyle: {
@@ -296,7 +336,7 @@ export default function ChartView({ parsed, totalRows, config, result, onDownloa
   };
 
   return (
-    <section className="card chart-card">
+    <section className="card chart-card" ref={cardRef}>
       <div className="chart-head">
         <div>
           <h2 className="chart-title">{title}</h2>
@@ -309,10 +349,26 @@ export default function ChartView({ parsed, totalRows, config, result, onDownloa
             {result.skipped > 0 && ` · ${result.skipped.toLocaleString('es-AR')} con datos incompletos`}
           </p>
         </div>
-        <button type="button" className="btn ghost small" onClick={onDownload} disabled={!hasData}>
-          Descargar CSV
-        </button>
+        <div className="chart-actions" data-export-skip="true">
+          <button type="button" className="btn ghost small" onClick={onDownload} disabled={!hasData}>
+            Descargar CSV
+          </button>
+          <button
+            type="button"
+            className="btn ghost small"
+            onClick={handleDownloadImage}
+            disabled={!hasData || exporting}
+            title="Descargar el gráfico como imagen PNG"
+          >
+            {exporting ? 'Generando…' : 'Descargar imagen'}
+          </button>
+        </div>
       </div>
+      {exportError && (
+        <p className="chart-export-error" role="alert">
+          {exportError}
+        </p>
+      )}
 
       <div className="chart-area">
         {hasData ? (
